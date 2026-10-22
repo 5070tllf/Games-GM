@@ -61,10 +61,17 @@ const firebaseConfig = { databaseURL: "https://class3b-5b39b-default-rtdb.asia-s
 const AUTHOR_PWD = "f2519484";
 const AUTH_KEY = "game_admin_auth_v2";
 
-const QUALITY_NAMES = ['凡品','下品','中品','上品','极品','仙品','神品','至宝','灵宝','玄宝','天宝','圣宝','道宝','尊宝','王宝','皇宝','帝宝','君宝','仙宝','神宝','圣尊宝','道尊宝','天主宝','圣天主宝','道天主宝','混沌至宝','鸿蒙至宝','星辰神石','紫微神石','太初神石','混元道果','天道道果','大道道果','鸿蒙道果','无极道果','太上道果','造化玉碟','混沌珠','盘古斧','东皇钟','太极图','诛仙剑','山河社稷图','炼妖壶','昊天塔','伏羲琴','神农鼎','昆仑镜','崆峒印','凤凰琴','九霄环佩','天问神剑','太虚神甲','大罗天衣','无极仙袍','造化仙袍','鸿蒙仙袍','圣道仙袍','天道仙袍','大道仙袍','混沌至宝','鸿蒙本源','宇宙本源','万物母气','天地玄黄','鸿蒙紫气','大道法则','混沌法则','终极本源'];
+// 107个品质（作者端同步）
+const QUALITY_NAMES = [
+  '凡品','下品','中品','上品','极品','仙品','神品','至宝','灵宝','玄宝','天宝','圣宝','道宝','尊宝','王宝','皇宝','帝宝','君宝','仙宝','神宝','圣尊宝','道尊宝','天主宝','圣天主宝','道天主宝','混沌至宝','鸿蒙至宝','星辰神石','紫微神石','太初神石','混元道果','天道道果','大道道果','鸿蒙道果','无极道果','太上道果','造化玉碟','混沌珠','盘古斧','东皇钟','太极图','诛仙剑','山河社稷图','炼妖壶','昊天塔','伏羲琴','神农鼎','昆仑镜','崆峒印','凤凰琴','九霄环佩','天问神剑','太虚神甲','大罗天衣','无极仙袍','造化仙袍','鸿蒙仙袍','圣道仙袍','天道仙袍','大道仙袍','混沌至宝','鸿蒙本源','宇宙本源','万物母气','天地玄黄','鸿蒙紫气','大道法则','混沌法则','终极本源',
+  '起源之石','维度结晶','时空沙漏','因果之丝','命运纺锤','虚无之源','创世神剑','灭世黑莲','不朽神座','永恒天舟','星空古路','神话之翼','纪元之书','真理之眼','无尽深渊','璀璨星海','神魔之血','仙帝传承','天道载体','大道仙宫','混元道胎','无极神图','鸿蒙紫府','造化玉盘','太上道剑','混沌神鼎','鸿蒙圣衣','本源神格','宇宙之心','万物母胎','鸿蒙青莲','创世青莲','灭世黑莲','造化青莲','混沌青莲','大道青莲','天道青莲','鸿蒙青莲','虚无青莲','终焉青莲'
+];
 const PART_NAMES = { weapon:'武器', helmet:'头盔', armor:'护甲', boots:'靴子', ring:'戒指', necklace:'项链', belt:'腰带', artifact:'法宝' };
 const PART_KEYS = ['weapon','helmet','armor','boots','ring','necklace','belt','artifact'];
 const REALM_NAMES = ['炼气','筑基','金丹','元婴','化神','炼虚','合体','大乘','渡劫','真仙','玄仙','地仙','天仙','金仙','大罗金仙','混元大罗金仙','准圣','圣人','天道圣人','大道圣人','鸿蒙圣人','造化圣人','混元圣人','无极圣人','太上圣人','混沌圣人','鸿蒙主宰','大道主宰','无极大道','太初大道','太易大道','太始大道','太素大道','太极大道','混元无极大罗金仙','混元太上无极金仙','混元太初无上金仙','混元太易无上金仙','混元太始无上金仙','混元太素无上金仙','混元太极无上金仙','混元太极大罗金仙','混元无极太上金仙','混元无上太初金仙','混元无上太易金仙','混元无上太始金仙','混元无上太素金仙','混元无上太极金仙','混元无极天道圣人','混元无上大道圣人','混元无极鸿蒙圣人','混元无上造化圣人','混元无极混元圣人','混元无上无极圣人','混元无极太上圣人','混元无上混沌圣人','混元无极鸿蒙主宰','混元无上大道主宰','混元无极无极大道','太上无极混元无上大道','太上无极混元无上天道','太上无极混元无上鸿蒙','太上无极混元无上造化','太上无极混元无上混沌','太上无极混元无上本源','太上无极混元无上终极','大道本源无上主宰','鸿蒙本源无上主宰','混沌本源无上主宰','宇宙本源无上主宰','万物本源无上主宰','终极本源无上主宰'];
+
+const PET_NAMES = ['灵狐','火麒麟','九尾狐','白虎','朱雀','玄武','青龙','穷奇','饕餮','混沌','梼杌','金乌','鲲鹏','凤凰','麒麟','狻猊','睚眦','囚牛','蒲牢','霸下'];
+const SPIRIT_NAMES = ['树精','石灵','剑灵','火灵','水灵','风灵','雷灵','光灵','暗灵','花精','药灵','器灵','符灵','阵灵','傀灵','妖灵','魔灵','仙灵','神灵','圣灵'];
 const SPELL_DEFS = [{ id:'sword', name:'御剑术' }, { id:'flame', name:'烈焰诀' }, { id:'ice', name:'寒冰咒' }, { id:'shield', name:'金刚罩' }, { id:'wind', name:'疾风步' }, { id:'heal', name:'回春术' }];
 
 let db = null;
@@ -72,14 +79,7 @@ let allPlayers = {};
 let selectedPlayer = null;
 
 function safeNum(v, fallback) { return (typeof v !== 'number' || !isFinite(v) || isNaN(v)) ? (fallback || 0) : v; }
-function fmt(v) {
-  v = safeNum(v, 0); const abs = Math.abs(v);
-  if (abs < 10000) return Math.floor(v).toString();
-  if (abs < 1e8) return (v/1e4).toFixed(2) + '万';
-  if (abs < 1e12) return (v/1e8).toFixed(2) + '亿';
-  if (abs < 1e16) return (v/1e12).toFixed(2) + '万亿';
-  return v.toExponential(2);
-}
+function fmt(v) { v = safeNum(v, 0); const abs = Math.abs(v); if (abs < 10000) return Math.floor(v).toString(); if (abs < 1e8) return (v/1e4).toFixed(2) + '万'; if (abs < 1e12) return (v/1e8).toFixed(2) + '亿'; if (abs < 1e16) return (v/1e12).toFixed(2) + '万亿'; return v.toExponential(2); }
 function escapeHtml(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
 function errShow(msg) { document.getElementById('gateErr').innerText = msg; }
@@ -247,7 +247,7 @@ window.createGiftPack = async function() {
     let itemData = { type: '' };
     if (type === '1') { itemData.type = 'peaches'; itemData.amount = parseFloat(prompt("数量:", "10000")) || 0; }
     else if (type === '2') { itemData.type = 'jade'; itemData.amount = parseFloat(prompt("数量:", "100")) || 0; }
-    else if (type === '3') { itemData.type = 'equipment'; const part = prompt("部位(weapon/helmet/armor/boots/ring/necklace/belt/artifact):", "weapon") || "weapon"; const q = parseInt(prompt("品质 0-66:", "10")) || 0; itemData.eq = { id: 'EQ-GIFT-' + Date.now() + Math.random(), part, quality: q, atk: 1000*(q+1), hp: 2000*(q+1), critRate: 0.05, critDmg: 0.5, enhance: 0 }; }
+    else if (type === '3') { itemData.type = 'equipment'; const part = prompt("部位(weapon/helmet/armor/boots/ring/necklace/belt/artifact):", "weapon") || "weapon"; const q = parseInt(prompt("品质 0-106:", "10")) || 0; itemData.eq = { id: 'EQ-GIFT-' + Date.now() + Math.random(), part, quality: q, atk: 1000*(q+1), hp: 2000*(q+1), critRate: 0.05, critDmg: 0.5, enhance: 0 }; }
     else if (type === '4') { itemData.type = 'exp'; itemData.amount = parseFloat(prompt("经验数量:", "100000")) || 0; }
     else continue;
     items.push(itemData);
@@ -271,7 +271,7 @@ window.sendPeaches = (id) => { const n = prompt('发放仙桃:', '1000'); if(n) 
 window.sendExp = (id) => { const n = prompt('发放经验:', '1000'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'exp', payload:{amount:parseFloat(n)}, claimed:false }); };
 window.sendTalent = (id) => { const n = prompt('天赋点:', '10'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'talentPoints', payload:{amount:parseFloat(n)}, claimed:false }); };
 window.sendSect = (id) => { const n = prompt('宗门贡献:', '100'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'sectPoints', payload:{amount:parseFloat(n)}, claimed:false }); };
-window.sendEquipment = (id) => { const part = prompt("部位:", "weapon"); const q = parseInt(prompt("品质 0-66:", "10")) || 0; push(ref(db, 'game_players/'+id+'/inbox'), { type:'equipment', payload:{ equipment:{ id:'EQ-'+Date.now(), part, quality:q, atk:100*(q+1), hp:200*(q+1), critRate:0, critDmg:0, enhance:0 } }, claimed:false }); };
+window.sendEquipment = (id) => { const part = prompt("部位:", "weapon"); const q = parseInt(prompt("品质 0-106:", "10")) || 0; push(ref(db, 'game_players/'+id+'/inbox'), { type:'equipment', payload:{ equipment:{ id:'EQ-'+Date.now(), part, quality:q, atk:100*(q+1), hp:200*(q+1), critRate:0, critDmg:0, enhance:0 } }, claimed:false }); };
 
 // ===== 修改数值 =====
 window.setCharLevel = (id) => { const v = prompt('等级:', '100'); if(v) update(ref(db, 'game_players/'+id), { charLevel: parseFloat(v) }); };
@@ -288,11 +288,11 @@ window.setSectPoints = (id) => { const v = prompt('宗门贡献:', '0'); if(v) u
 
 // ===== 修改装备 =====
 window.setEquipEnhance = (id, part) => { const v = prompt('强化等级:', '0'); if(v) update(ref(db, 'game_players/'+id+'/equipment/'+part), { enhance: parseInt(v) }); };
-window.setEquipStats = (id, part) => { const a = prompt('攻击:', '0'); const h = prompt('气血:', '0'); const q = prompt('品质(0-66):', '0'); if(a && h && q) update(ref(db, 'game_players/'+id+'/equipment/'+part), { atk: parseFloat(a), hp: parseFloat(h), quality: parseInt(q) }); };
+window.setEquipStats = (id, part) => { const a = prompt('攻击:', '0'); const h = prompt('气血:', '0'); const q = prompt('品质(0-106):', '0'); if(a && h && q) update(ref(db, 'game_players/'+id+'/equipment/'+part), { atk: parseFloat(a), hp: parseFloat(h), quality: parseInt(q) }); };
 
 // ===== 修改背包里的装备 =====
 window.setInvEquipEnhance = (id, idx) => { const v = prompt('强化等级:', '0'); if(v) update(ref(db, 'game_players/'+id+'/inventory/'+idx), { enhance: parseInt(v) }); };
-window.setInvEquipStats = (id, idx) => { const a = prompt('攻击:', '0'); const h = prompt('气血:', '0'); const q = prompt('品质(0-66):', '0'); if(a && h && q) update(ref(db, 'game_players/'+id+'/inventory/'+idx), { atk: parseFloat(a), hp: parseFloat(h), quality: parseInt(q) }); };
+window.setInvEquipStats = (id, idx) => { const a = prompt('攻击:', '0'); const h = prompt('气血:', '0'); const q = prompt('品质(0-106):', '0'); if(a && h && q) update(ref(db, 'game_players/'+id+'/inventory/'+idx), { atk: parseFloat(a), hp: parseFloat(h), quality: parseInt(q) }); };
 window.deleteInvEquip = (id, idx) => { if(confirm('确定删除这件装备吗？')) remove(ref(db, 'game_players/'+id+'/inventory/'+idx)); };
 
 // ===== 仙术 =====
