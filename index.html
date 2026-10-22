@@ -344,6 +344,7 @@ window.sendExp = (id) => {
   push(ref(db, 'game_players/'+id+'/inbox'), { type:'exp', payload:{amount:v}, time:Date.now(), claimed:false })
     .then(()=>alert('已发放 ' + fmt(v))).catch(e=>alert('失败:'+e.message));
 };
+  
 window.sendEquipment = (id) => {
   const part = prompt('部位（weapon/helmet/armor/boots/ring/necklace/belt/artifact）：','weapon');
   if (!PART_KEYS.includes(part)) return alert('部位错误');
