@@ -13,6 +13,7 @@ body { background:#000; color:#fff; height:100vh; height:100dvh; display:flex; o
 #gateScreen input { width:100%; padding:14px; border:1px solid rgba(255,255,255,0.15); border-radius:12px; background:rgba(0,0,0,0.5); color:#fff; outline:none; font-size:16px; margin-bottom:12px; }
 #gateScreen button { width:100%; padding:15px; border:none; border-radius:12px; background:linear-gradient(135deg,#ffd700,#ff8c00); color:#000; font-weight:800; font-size:16px; cursor:pointer; }
 #gateScreen .err { color:#ff3b30; text-align:center; font-size:13px; margin-top:10px; min-height:20px; white-space:pre-wrap; }
+
 #app { display:none; flex:1; }
 .sidebar { width:34%; max-width:340px; min-width:110px; background:rgba(20,20,20,0.7); backdrop-filter:blur(20px); border-right:1px solid rgba(255,255,255,0.1); display:flex; flex-direction:column; }
 .sidebar-header { padding:14px; border-bottom:1px solid rgba(255,255,255,0.1); font-size:14px; font-weight:800; color:#ffd700; text-align:center; }
@@ -29,7 +30,6 @@ body { background:#000; color:#fff; height:100vh; height:100dvh; display:flex; o
 .btn-purple { background:rgba(156,39,176,0.15); color:#ce93d8; border-color:rgba(156,39,176,0.3); }
 .btn-jade { background:rgba(0,229,255,0.15); color:#00e5ff; border-color:rgba(0,229,255,0.3); }
 .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.debug { position:fixed; bottom:8px; left:8px; right:8px; background:rgba(0,0,0,0.9); color:#0f0; font-size:11px; padding:6px 10px; border-radius:8px; z-index:999999; display:none; font-family:monospace; }
 </style>
 </head>
 <body>
@@ -49,27 +49,22 @@ body { background:#000; color:#fff; height:100vh; height:100dvh; display:flex; o
     <div id="playerList"><div style="color:#666;text-align:center;padding:20px;font-size:12px;">加载中...</div></div>
   </div>
   <div class="main-area" id="playerDetail">
-    <div style="text-align:center;color:#666;padding:50px;font-size:14px;">点击左侧玩家</div>
+    <div style="text-align:center;color:#666;padding:50px;font-size:14px;">点击左侧玩家查看详情</div>
   </div>
 </div>
-<div class="debug" id="debugBox"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, get, set, update, push, onValue, remove }
-  from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, get, set, update, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = { databaseURL: "https://class3b-5b39b-default-rtdb.asia-southeast1.firebasedatabase.app" };
 const AUTHOR_PWD = "f2519484";
 const AUTH_KEY = "game_admin_auth_v2";
-const MAX_SAFE = 1.7e308;
 
-const QUALITY_NAMES = ['凡品','下品','中品','上品','极品','仙品','神品','至宝','灵宝','玄宝','天宝','圣宝','道宝','尊宝','王宝','皇宝','帝宝','君宝','仙宝','神宝','圣尊宝','道尊宝','天主宝','圣天主宝','道天主宝','混沌至宝','鸿蒙至宝'];
+const QUALITY_NAMES = ['凡品','下品','中品','上品','极品','仙品','神品','至宝','灵宝','玄宝','天宝','圣宝','道宝','尊宝','王宝','皇宝','帝宝','君宝','仙宝','神宝','圣尊宝','道尊宝','天主宝','圣天主宝','道天主宝','混沌至宝','鸿蒙至宝','星辰神石','紫微神石','太初神石','混元道果','天道道果','大道道果','鸿蒙道果','无极道果','太上道果','造化玉碟','混沌珠','盘古斧','东皇钟','太极图','诛仙剑','山河社稷图','炼妖壶','昊天塔','伏羲琴','神农鼎','昆仑镜','崆峒印','凤凰琴','九霄环佩','天问神剑','太虚神甲','大罗天衣','无极仙袍','造化仙袍','鸿蒙仙袍','圣道仙袍','天道仙袍','大道仙袍','混沌至宝','鸿蒙本源','宇宙本源','万物母气','天地玄黄','鸿蒙紫气','大道法则','混沌法则','终极本源'];
 const PART_NAMES = { weapon:'武器', helmet:'头盔', armor:'护甲', boots:'靴子', ring:'戒指', necklace:'项链', belt:'腰带', artifact:'法宝' };
 const PART_KEYS = ['weapon','helmet','armor','boots','ring','necklace','belt','artifact'];
-const REALM_NAMES = ['炼气','筑基','金丹','元婴','化神','炼虚','合体','大乘','渡劫','真仙','玄仙','地仙','天仙','金仙','大罗金仙','混元大罗金仙','准圣','圣人','天道圣人','大道圣人','鸿蒙圣人','造化圣人','混元圣人','无极圣人','太上圣人','混沌圣人','鸿蒙主宰','大道主宰','无极大道'];
-const PET_NAMES = ['灵狐','火麒麟','九尾狐'];
-const SPIRIT_NAMES = ['树精','石灵','剑灵'];
+const REALM_NAMES = ['炼气','筑基','金丹','元婴','化神','炼虚','合体','大乘','渡劫','真仙','玄仙','地仙','天仙','金仙','大罗金仙','混元大罗金仙','准圣','圣人','天道圣人','大道圣人','鸿蒙圣人','造化圣人','混元圣人','无极圣人','太上圣人','混沌圣人','鸿蒙主宰','大道主宰','无极大道','太初大道','太易大道','太始大道','太素大道','太极大道','混元无极大罗金仙','混元太上无极金仙','混元太初无上金仙','混元太易无上金仙','混元太始无上金仙','混元太素无上金仙','混元太极无上金仙','混元太极大罗金仙','混元无极太上金仙','混元无上太初金仙','混元无上太易金仙','混元无上太始金仙','混元无上太素金仙','混元无上太极金仙','混元无极天道圣人','混元无上大道圣人','混元无极鸿蒙圣人','混元无上造化圣人','混元无极混元圣人','混元无上无极圣人','混元无极太上圣人','混元无上混沌圣人','混元无极鸿蒙主宰','混元无上大道主宰','混元无极无极大道','太上无极混元无上大道','太上无极混元无上天道','太上无极混元无上鸿蒙','太上无极混元无上造化','太上无极混元无上混沌','太上无极混元无上本源','太上无极混元无上终极','大道本源无上主宰','鸿蒙本源无上主宰','混沌本源无上主宰','宇宙本源无上主宰','万物本源无上主宰','终极本源无上主宰'];
 const SPELL_DEFS = [{ id:'sword', name:'御剑术' }, { id:'flame', name:'烈焰诀' }, { id:'ice', name:'寒冰咒' }, { id:'shield', name:'金刚罩' }, { id:'wind', name:'疾风步' }, { id:'heal', name:'回春术' }];
 
 let db = null;
@@ -85,12 +80,9 @@ function fmt(v) {
   if (abs < 1e16) return (v/1e12).toFixed(2) + '万亿';
   return v.toExponential(2);
 }
-
-function debug(msg) { const box = document.getElementById('debugBox'); if (box) { box.style.display = 'block'; box.innerText = msg; } }
-function errShow(msg) { const e = document.getElementById('gateErr'); if (e) e.innerText = msg; debug('ERR: ' + msg); }
 function escapeHtml(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
-window.addEventListener('error', e => errShow('脚本错误: ' + (e.message || '未知')));
+function errShow(msg) { document.getElementById('gateErr').innerText = msg; }
 
 function boot() {
   const btn = document.getElementById('gateBtn'); const input = document.getElementById('pwdInput');
@@ -119,7 +111,7 @@ function renderPlayerList() {
   ids.forEach(id => {
     const p = allPlayers[id]; const div = document.createElement('div'); div.className = 'player-item';
     if (id === selectedPlayer) div.style.background = 'rgba(255,215,0,0.15)';
-    div.innerHTML = `<div style="font-weight:bold;color:#fff;font-size:13px;">${escapeHtml(p.name||'无名')}</div><div style="font-size:11px;color:#888;margin-top:3px;">Lv.${fmt(p.charLevel)}</div>`;
+    div.innerHTML = `<div style="font-weight:bold;color:#fff;font-size:13px;">${escapeHtml(p.name||'无名')}</div><div style="font-size:11px;color:#888;margin-top:3px;">${REALM_NAMES[safeNum(p.realm,0)]||'炼气'} ${safeNum(p.realmLevel,1)}层 · Lv.${fmt(p.charLevel)}</div>`;
     div.onclick = () => { selectedPlayer = id; renderPlayerList(); renderPlayerDetail(id, p); };
     el.appendChild(div);
   });
@@ -127,18 +119,65 @@ function renderPlayerList() {
 
 function renderPlayerDetail(id, p) {
   const el = document.getElementById('playerDetail');
+  
+  const spellsHtml = SPELL_DEFS.map(sp => {
+    const d = (p.spells && p.spells[sp.id]) || { level: 1, upgradeEnd: 0 };
+    const isUp = d.upgradeEnd > Date.now();
+    return `<div style="padding:8px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:6px;font-size:12px;">
+      <div><b style="color:#ffd700;">${sp.name}</b> Lv.${fmt(d.level)} ${isUp?`<span style="color:#00c6ff;">(升级中)</span>`:''}</div>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <button class="btn" style="margin:0;padding:6px;font-size:11px;" onclick="setSpellLevel('${id}','${sp.id}')">设等级</button>
+        ${isUp ? `<button class="btn btn-gold" style="margin:0;padding:6px;font-size:11px;" onclick="speedupSpell('${id}','${sp.id}')">加速</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const eqHtml = PART_KEYS.map(part => {
+    const eq = p.equipment && p.equipment[part];
+    if (!eq) return `<div style="padding:6px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:11px;color:#666;">${PART_NAMES[part]}: 空</div>`;
+    return `<div style="padding:6px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:11px;">
+      <div><b style="color:#ffd700;">${PART_NAMES[part]}</b> ${QUALITY_NAMES[eq.quality]||'未知'} ${eq.enhance?'+'+fmt(eq.enhance):''}</div>
+      <div style="color:#aaa;">攻${fmt(eq.atk)} 血${fmt(eq.hp)}</div>
+      <div style="display:flex;gap:4px;margin-top:4px;">
+        <button class="btn btn-gold" style="margin:0;padding:4px;font-size:10px;flex:1;" onclick="setEquipEnhance('${id}','${part}')">改强化</button>
+        <button class="btn btn-purple" style="margin:0;padding:4px;font-size:10px;flex:1;" onclick="setEquipStats('${id}','${part}')">改属性</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  let invHtml = '';
+  if (p.inventory && p.inventory.length > 0) {
+    invHtml = p.inventory.slice(0, 20).map((eq, idx) => {
+      return `<div style="padding:6px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:11px;margin-bottom:4px;">
+        <div style="color:#888;">[背包] ${PART_NAMES[eq.part]||'未知'} - ${QUALITY_NAMES[eq.quality]||'未知'}</div>
+        <div style="color:#aaa;">攻${fmt(eq.atk)} 血${fmt(eq.hp)}</div>
+        <div style="display:flex;gap:4px;margin-top:4px;">
+          <button class="btn btn-gold" style="margin:0;padding:4px;font-size:10px;flex:1;" onclick="setInvEquipEnhance('${id}', ${idx})">改强化</button>
+          <button class="btn btn-purple" style="margin:0;padding:4px;font-size:10px;flex:1;" onclick="setInvEquipStats('${id}', ${idx})">改属性</button>
+          <button class="btn btn-red" style="margin:0;padding:4px;font-size:10px;flex:1;" onclick="deleteInvEquip('${id}', ${idx})">删除</button>
+        </div>
+      </div>`;
+    }).join('');
+    if (p.inventory.length > 20) invHtml += `<div style="text-align:center;font-size:10px;color:#666;">...还有 ${p.inventory.length - 20} 件装备未展示</div>`;
+  } else {
+    invHtml = '<div style="color:#666;font-size:11px;">背包为空</div>';
+  }
+
   el.innerHTML = `
     <div class="card">
       <div style="font-size:16px;font-weight:800;color:#ffd700;margin-bottom:8px;">${escapeHtml(p.name||'无名')}</div>
       <div style="font-size:12px;color:#aaa;line-height:1.8;">
         ID：${id}<br>Lv.${fmt(p.charLevel)} · 经验 ${fmt(p.exp)}<br>
         境界 ${REALM_NAMES[safeNum(p.realm,0)]||'炼气'} ${safeNum(p.realmLevel,1)}层<br>
+        仙树 Lv.${fmt(p.treeLevel)} ${(p.treeUpgradeEnd>Date.now())?`(培育中)`:''}<br>
+        轮回 ${safeNum(p.reincarnateCount,0)} 次 | 天赋点 ${safeNum(p.talentPoints,0)}<br>
+        宗门 ${p.sect?p.sect.name:'无'} | 贡献 ${safeNum(p.sectPoints,0)}<br>
         💎 仙玉 ${fmt(p.jade)} · 🍑 仙桃 ${fmt(p.peaches)}<br>
         攻${fmt(p.atk)} 血${fmt(p.hp)}
       </div>
+      ${(p.treeUpgradeEnd > Date.now()) ? `<button class="btn btn-gold" style="margin-top:8px;" onclick="speedupTree('${id}')">⚡ 加速仙树</button>` : ''}
     </div>
     
-    <!-- 发布礼包功能 -->
     <div class="card">
       <div class="card-title">🎁 发布特惠礼包</div>
       <button class="btn btn-gold" onclick="createGiftPack()">发布新礼包</button>
@@ -150,17 +189,48 @@ function renderPlayerDetail(id, p) {
       <button class="btn btn-jade" onclick="sendJade('${id}')">💎 发放仙玉</button>
       <button class="btn" onclick="sendPeaches('${id}')">🍑 发放仙桃</button>
       <button class="btn" onclick="sendExp('${id}')">⭐ 发放经验</button>
-      <button class="btn" onclick="sendEquipment('${id}')">⚔️ 发放装备</button>
+      <button class="btn btn-purple" onclick="sendTalent('${id}')">✨ 发放天赋点</button>
+      <button class="btn btn-green" onclick="sendSect('${id}')">🏯 发放宗门贡献</button>
+      <button class="btn" onclick="sendEquipment('${id}')">⚔️ 发放装备（直接进背包）</button>
     </div>
 
     <div class="card">
-      <div class="card-title">🔧 修改数值</div>
+      <div class="card-title">🔧 修改核心数值</div>
       <div class="grid2">
         <button class="btn" onclick="setCharLevel('${id}')">改等级</button>
+        <button class="btn" onclick="setExp('${id}')">改经验</button>
+        <button class="btn" onclick="setTreeLevel('${id}')">改仙树等级</button>
         <button class="btn" onclick="setJade('${id}')">改仙玉</button>
         <button class="btn" onclick="setPeaches('${id}')">改仙桃</button>
+        <button class="btn" onclick="setRealm('${id}')">改境界</button>
         <button class="btn" onclick="setAtk('${id}')">改攻击</button>
+        <button class="btn" onclick="setHp('${id}')">改气血</button>
+        <button class="btn" onclick="setReincarnate('${id}')">改轮回次数</button>
+        <button class="btn" onclick="setTalent('${id}')">改天赋点</button>
+        <button class="btn" onclick="setSectPoints('${id}')">改宗门贡献</button>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚔️ 身上穿戴的装备</div>
+      <div style="display:grid;gap:6px;">${eqHtml}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎒 玩家背包装备</div>
+      <div style="display:grid;gap:6px;">${invHtml}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📖 仙术管理</div>
+      ${spellsHtml}
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔨 玩家管理</div>
+      <button class="btn btn-red" onclick="banPlayer('${id}')">🚫 封禁</button>
+      <button class="btn btn-green" onclick="unbanPlayer('${id}')">✅ 解封</button>
+      <button class="btn btn-red" onclick="deletePlayer('${id}')">☢️ 删除存档</button>
     </div>
   `;
 }
@@ -169,66 +239,73 @@ function renderPlayerDetail(id, p) {
 window.createGiftPack = async function() {
   const name = prompt("请输入礼包名称（如：特惠大礼包）：", "特惠大礼包");
   if (!name) return;
-  
   let items = [];
   let adding = true;
   while (adding) {
     const type = prompt("添加物品类型：\n1. 仙桃\n2. 仙玉\n3. 装备\n4. 经验\n5. 结束添加", "1");
     if (type === '5' || type === null) { adding = false; break; }
-    
     let itemData = { type: '' };
-    if (type === '1') { itemData.type = 'peaches'; itemData.amount = parseInt(prompt("数量:", "10000")) || 0; }
-    else if (type === '2') { itemData.type = 'jade'; itemData.amount = parseInt(prompt("数量:", "100")) || 0; }
-    else if (type === '3') {
-      itemData.type = 'equipment';
-      const part = prompt("部位(weapon/helmet/armor/boots/ring/necklace/belt/artifact):", "weapon") || "weapon";
-      const q = parseInt(prompt("品质 0-66:", "10")) || 0;
-      itemData.eq = { id: 'EQ-GIFT-' + Date.now() + Math.random(), part, quality: q, atk: 1000*(q+1), hp: 2000*(q+1), critRate: 0.05, critDmg: 0.5, enhance: 0 };
-    }
-    else if (type === '4') { itemData.type = 'exp'; itemData.amount = parseInt(prompt("经验数量:", "100000")) || 0; }
+    if (type === '1') { itemData.type = 'peaches'; itemData.amount = parseFloat(prompt("数量:", "10000")) || 0; }
+    else if (type === '2') { itemData.type = 'jade'; itemData.amount = parseFloat(prompt("数量:", "100")) || 0; }
+    else if (type === '3') { itemData.type = 'equipment'; const part = prompt("部位(weapon/helmet/armor/boots/ring/necklace/belt/artifact):", "weapon") || "weapon"; const q = parseInt(prompt("品质 0-66:", "10")) || 0; itemData.eq = { id: 'EQ-GIFT-' + Date.now() + Math.random(), part, quality: q, atk: 1000*(q+1), hp: 2000*(q+1), critRate: 0.05, critDmg: 0.5, enhance: 0 }; }
+    else if (type === '4') { itemData.type = 'exp'; itemData.amount = parseFloat(prompt("经验数量:", "100000")) || 0; }
     else continue;
-    
     items.push(itemData);
     alert("已添加：" + itemData.type);
   }
-  
   if (items.length === 0) return alert("未添加任何物品");
-  
   const priceStr = prompt("请输入价格（例如 10t 代表10仙玉，500d 代表500仙桃）：", "10t");
   if (!priceStr) return;
-  
-  let cost = 0;
-  let currency = 'jade';
-  if (priceStr.endsWith('t')) { cost = parseInt(priceStr.slice(0, -1)); currency = 'jade'; }
-  else if (priceStr.endsWith('d')) { cost = parseInt(priceStr.slice(0, -1)); currency = 'peaches'; }
+  let cost = 0; let currency = 'jade';
+  if (priceStr.endsWith('t')) { cost = parseFloat(priceStr.slice(0, -1)); currency = 'jade'; }
+  else if (priceStr.endsWith('d')) { cost = parseFloat(priceStr.slice(0, -1)); currency = 'peaches'; }
   else { alert("格式错误，需以 t 或 d 结尾"); return; }
-  
   if (isNaN(cost)) return alert("价格错误");
-  
-  push(ref(db, 'game_gifts'), {
-    name, items, cost, currency, createdAt: Date.now()
-  }).then(() => alert("✅ 礼包发布成功！"));
+  push(ref(db, 'game_gifts'), { name, items, cost, currency, createdAt: Date.now() }).then(() => alert("✅ 礼包发布成功！"));
 };
+window.clearAllGifts = function() { if (confirm("确定清空所有特惠礼包吗？")) remove(ref(db, 'game_gifts')).then(() => alert("已清空")); };
 
-window.clearAllGifts = function() {
-  if (confirm("确定清空所有特惠礼包吗？")) remove(ref(db, 'game_gifts')).then(() => alert("已清空"));
-};
+// ===== 发放物品 =====
+window.sendJade = (id) => { const n = prompt('发放仙玉:', '10'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'jade', payload:{amount:parseFloat(n)}, claimed:false }); };
+window.sendPeaches = (id) => { const n = prompt('发放仙桃:', '1000'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'peaches', payload:{amount:parseFloat(n)}, claimed:false }); };
+window.sendExp = (id) => { const n = prompt('发放经验:', '1000'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'exp', payload:{amount:parseFloat(n)}, claimed:false }); };
+window.sendTalent = (id) => { const n = prompt('天赋点:', '10'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'talentPoints', payload:{amount:parseFloat(n)}, claimed:false }); };
+window.sendSect = (id) => { const n = prompt('宗门贡献:', '100'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'sectPoints', payload:{amount:parseFloat(n)}, claimed:false }); };
+window.sendEquipment = (id) => { const part = prompt("部位:", "weapon"); const q = parseInt(prompt("品质 0-66:", "10")) || 0; push(ref(db, 'game_players/'+id+'/inbox'), { type:'equipment', payload:{ equipment:{ id:'EQ-'+Date.now(), part, quality:q, atk:100*(q+1), hp:200*(q+1), critRate:0, critDmg:0, enhance:0 } }, claimed:false }); };
 
-// ===== 其他功能（省略，保留核心） =====
-window.sendJade = (id) => { const n = prompt('仙玉:', '10'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'jade', payload:{amount:parseFloat(n)}, claimed:false }); };
-window.sendPeaches = (id) => { const n = prompt('仙桃:', '1000'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'peaches', payload:{amount:parseFloat(n)}, claimed:false }); };
-window.sendExp = (id) => { const n = prompt('经验:', '1000'); if(n) push(ref(db, 'game_players/'+id+'/inbox'), { type:'exp', payload:{amount:parseFloat(n)}, claimed:false }); };
-window.sendEquipment = (id) => { 
-  const part = prompt("部位:", "weapon"); const q = parseInt(prompt("品质 0-66:", "10")) || 0;
-  push(ref(db, 'game_players/'+id+'/inbox'), { type:'equipment', payload:{ equipment:{ id:'EQ-'+Date.now(), part, quality:q, atk:100*(q+1), hp:200*(q+1), critRate:0, critDmg:0, enhance:0 } }, claimed:false }); 
-};
-window.setCharLevel = (id) => { const v = prompt('等级:', '100'); if(v) update(ref(db, 'game_players/'+id), { charLevel: parseInt(v) }); };
+// ===== 修改数值 =====
+window.setCharLevel = (id) => { const v = prompt('等级:', '100'); if(v) update(ref(db, 'game_players/'+id), { charLevel: parseFloat(v) }); };
+window.setExp = (id) => { const v = prompt('经验:', '0'); if(v) update(ref(db, 'game_players/'+id), { exp: parseFloat(v) }); };
+window.setTreeLevel = (id) => { const v = prompt('仙树等级:', '1'); if(v) update(ref(db, 'game_players/'+id), { treeLevel: parseFloat(v) }); };
 window.setJade = (id) => { const v = prompt('仙玉:', '10000'); if(v) update(ref(db, 'game_players/'+id), { jade: parseFloat(v) }); };
 window.setPeaches = (id) => { const v = prompt('仙桃:', '100000'); if(v) update(ref(db, 'game_players/'+id), { peaches: parseFloat(v) }); };
+window.setRealm = (id) => { const r = prompt('境界(0-68):', '0'); if(r) update(ref(db, 'game_players/'+id), { realm: parseInt(r) }); };
 window.setAtk = (id) => { const v = prompt('攻击:', '10000'); if(v) update(ref(db, 'game_players/'+id), { atk: parseFloat(v) }); };
+window.setHp = (id) => { const v = prompt('气血:', '10000'); if(v) update(ref(db, 'game_players/'+id), { hp: parseFloat(v) }); };
+window.setReincarnate = (id) => { const v = prompt('轮回次数:', '0'); if(v) update(ref(db, 'game_players/'+id), { reincarnateCount: parseInt(v) }); };
+window.setTalent = (id) => { const v = prompt('天赋点:', '0'); if(v) update(ref(db, 'game_players/'+id), { talentPoints: parseFloat(v) }); };
+window.setSectPoints = (id) => { const v = prompt('宗门贡献:', '0'); if(v) update(ref(db, 'game_players/'+id), { sectPoints: parseFloat(v) }); };
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-else boot();
+// ===== 修改装备 =====
+window.setEquipEnhance = (id, part) => { const v = prompt('强化等级:', '0'); if(v) update(ref(db, 'game_players/'+id+'/equipment/'+part), { enhance: parseInt(v) }); };
+window.setEquipStats = (id, part) => { const a = prompt('攻击:', '0'); const h = prompt('气血:', '0'); const q = prompt('品质(0-66):', '0'); if(a && h && q) update(ref(db, 'game_players/'+id+'/equipment/'+part), { atk: parseFloat(a), hp: parseFloat(h), quality: parseInt(q) }); };
+
+// ===== 修改背包里的装备 =====
+window.setInvEquipEnhance = (id, idx) => { const v = prompt('强化等级:', '0'); if(v) update(ref(db, 'game_players/'+id+'/inventory/'+idx), { enhance: parseInt(v) }); };
+window.setInvEquipStats = (id, idx) => { const a = prompt('攻击:', '0'); const h = prompt('气血:', '0'); const q = prompt('品质(0-66):', '0'); if(a && h && q) update(ref(db, 'game_players/'+id+'/inventory/'+idx), { atk: parseFloat(a), hp: parseFloat(h), quality: parseInt(q) }); };
+window.deleteInvEquip = (id, idx) => { if(confirm('确定删除这件装备吗？')) remove(ref(db, 'game_players/'+id+'/inventory/'+idx)); };
+
+// ===== 仙术 =====
+window.setSpellLevel = (id, spellId) => { const v = prompt('仙术等级:', '1'); if(v) update(ref(db, 'game_players/'+id+'/spells/'+spellId), { level: parseFloat(v) }); };
+window.speedupSpell = (id, spellId) => { update(ref(db, 'game_players/'+id+'/spells/'+spellId), { upgradeEnd: 0 }); alert('已加速'); };
+window.speedupTree = (id) => { update(ref(db, 'game_players/'+id), { treeUpgradeEnd: 0 }); alert('已加速'); };
+
+// ===== 玩家管理 =====
+window.banPlayer = (id) => { const reason = prompt('封禁原因:', '违规'); if(reason) set(ref(db, 'game_config/banned_players/'+id), { reason, time: Date.now() }).then(() => alert('已封禁')); };
+window.unbanPlayer = (id) => { remove(ref(db, 'game_config/banned_players/'+id)).then(() => alert('已解封')); };
+window.deletePlayer = (id) => { if(confirm('☢️ 确定删除该玩家全部存档？不可恢复！')) remove(ref(db, 'game_players/'+id)).then(() => { selectedPlayer = null; document.getElementById('playerDetail').innerHTML = ''; alert('已删除'); }); };
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 </script>
 </body>
 </html>
