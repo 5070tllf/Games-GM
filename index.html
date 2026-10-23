@@ -301,7 +301,7 @@ function renderPlayerDetail(id, p) {
   `;
 }
 
-// ===== 邮件功能（包含所有物品） =====
+// ===== 邮件功能（所有物品+自定义数量） =====
 window.sendMail = function(targetId) {
   const targetName = targetId === 'all' ? '全服玩家' : (allPlayers[targetId] ? allPlayers[targetId].name : '该玩家');
   
@@ -333,27 +333,33 @@ window.sendMail = function(targetId) {
     </div>
   `;
 
-  // 装备
+  // 装备：选品质 + 填数量
   let qualityOpts = QUALITY_NAMES.map((q, i) => `<option value="${i}">${i}阶 - ${q}</option>`).join('');
   let equipHtml = `
     <div style="background:rgba(255,215,0,0.1);padding:8px;border-radius:6px;grid-column: span 2;">
-      <div style="font-size:12px;color:#ffd700;margin-bottom:4px;">⚔️ 极品装备 (选择品质，发放1件)</div>
-      <select id="mail_equip_quality" style="width:100%;padding:6px;border-radius:4px;background:#222;color:#fff;border:1px solid #444;">
-        <option value="-1">不发放装备</option>
-        ${qualityOpts}
-      </select>
+      <div style="font-size:12px;color:#ffd700;margin-bottom:4px;">⚔️ 极品装备</div>
+      <div style="display:flex; gap:10px;">
+        <select id="mail_equip_quality" style="flex:2;padding:6px;border-radius:4px;background:#222;color:#fff;border:1px solid #444;">
+          <option value="-1">不发放装备</option>
+          ${qualityOpts}
+        </select>
+        <input id="mail_equip_count" type="text" placeholder="件数" value="1" style="flex:1;padding:6px;border-radius:4px;background:#222;color:#fff;border:1px solid #444;">
+      </div>
     </div>
   `;
 
-  // 丹药选择 (全种类)
+  // 指定丹药：选种类 + 填数量
   let pillOpts = PILL_NAMES.map((p, i) => `<option value="${i}">${p}</option>`).join('');
   let pillHtml = `
     <div style="background:rgba(156,39,176,0.1);padding:8px;border-radius:6px;grid-column: span 2;">
-      <div style="font-size:12px;color:#ce93d8;margin-bottom:4px;">💊 指定丹药 (选种类，发1颗)</div>
-      <select id="mail_pill_name" style="width:100%;padding:6px;border-radius:4px;background:#222;color:#fff;border:1px solid #444;">
-        <option value="-1">不发放指定丹药</option>
-        ${pillOpts}
-      </select>
+      <div style="font-size:12px;color:#ce93d8;margin-bottom:4px;">💊 指定丹药</div>
+      <div style="display:flex; gap:10px;">
+        <select id="mail_pill_name" style="flex:2;padding:6px;border-radius:4px;background:#222;color:#fff;border:1px solid #444;">
+          <option value="-1">不发放指定丹药</option>
+          ${pillOpts}
+        </select>
+        <input id="mail_pill_count" type="text" placeholder="数量" value="1" style="flex:1;padding:6px;border-radius:4px;background:#222;color:#fff;border:1px solid #444;">
+      </div>
     </div>
   `;
 
@@ -404,14 +410,17 @@ window.confirmSendMail = async function(targetId) {
   const sectPoints = parseBigNum(document.getElementById('mail_sectPoints').value, 0); if (sectPoints > 0) attachments.sectPoints = sectPoints;
   const ascPill = parseBigNum(document.getElementById('mail_ascensionPill').value, 0); if (ascPill > 0) attachments.ascensionPill = ascPill;
   
+  // 丹药和装备的数量
   const pillType = parseInt(document.getElementById('mail_pill_name').value);
-  if (pillType >= 0) attachments.pill = { type: pillType };
+  const pillCount = parseBigNum(document.getElementById('mail_pill_count').value, 1);
+  if (pillType >= 0 && pillCount > 0) attachments.pill = { type: pillType, count: pillCount };
   
   const pet = parseBigNum(document.getElementById('mail_pet').value, 0); if (pet > 0) attachments.pet = pet;
   const spirit = parseBigNum(document.getElementById('mail_spirit').value, 0); if (spirit > 0) attachments.spirit = spirit;
   
   const equipQuality = parseInt(document.getElementById('mail_equip_quality').value);
-  if (equipQuality >= 0) attachments.equipment = { quality: equipQuality };
+  const equipCount = parseBigNum(document.getElementById('mail_equip_count').value, 1);
+  if (equipQuality >= 0 && equipCount > 0) attachments.equipment = { quality: equipQuality, count: equipCount };
 
   if (Object.keys(attachments).length === 0) return alert("请至少填写一种附件！");
 
