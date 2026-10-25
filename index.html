@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>游戏作者端 · 上帝控制台</title>
+<title>游戏作者控制台</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif; -webkit-tap-highlight-color:transparent; }
 body { background:#000; color:#fff; height:100vh; height:100dvh; display:flex; overflow:hidden; }
@@ -301,7 +301,7 @@ function renderPlayerDetail(id, p) {
   `;
 }
 
-// ===== 邮件功能（所有物品+自定义数量） =====
+// ===== 邮件功能（包含全物品/装备/进阶，且支持发送多封） =====
 window.sendMail = function(targetId) {
   const targetName = targetId === 'all' ? '全服玩家' : (allPlayers[targetId] ? allPlayers[targetId].name : '该玩家');
   
@@ -410,7 +410,6 @@ window.confirmSendMail = async function(targetId) {
   const sectPoints = parseBigNum(document.getElementById('mail_sectPoints').value, 0); if (sectPoints > 0) attachments.sectPoints = sectPoints;
   const ascPill = parseBigNum(document.getElementById('mail_ascensionPill').value, 0); if (ascPill > 0) attachments.ascensionPill = ascPill;
   
-  // 丹药和装备的数量
   const pillType = parseInt(document.getElementById('mail_pill_name').value);
   const pillCount = parseBigNum(document.getElementById('mail_pill_count').value, 1);
   if (pillType >= 0 && pillCount > 0) attachments.pill = { type: pillType, count: pillCount };
@@ -424,24 +423,39 @@ window.confirmSendMail = async function(targetId) {
 
   if (Object.keys(attachments).length === 0) return alert("请至少填写一种附件！");
 
+  // 【新增】询问发送封数
+  let mailCountStr = prompt("请输入要发送几封邮件？(输入数字，例如 1, 5, 10)", "1");
+  if (mailCountStr === null) return; 
+  let mailCount = parseInt(mailCountStr);
+  if (isNaN(mailCount) || mailCount <= 0) return alert("请输入大于0的有效数字！");
+  if (mailCount > 50) {
+      if (!confirm(`⚠️ 你即将发送 ${mailCount} 封邮件，确定吗？`)) return;
+  }
+
   const mailData = { title, content, attachments, time: Date.now(), claimed: false };
 
   if (targetId === 'all') {
-    if(!confirm("⚠️ 确定要全服群发此邮件吗？")) return;
+    if(!confirm(`⚠️ 确定要全服群发 ${mailCount} 封此邮件吗？`)) return;
     get(ref(db, 'game_players')).then(snap => {
       if(snap.exists()){
         const players = snap.val();
-        let count = 0;
-        for(let pid in players){ push(ref(db, `game_players/${pid}/mail`), mailData); count++; }
-        alert(`✅ 全服邮件发送成功！共发送给 ${count} 名玩家。`);
+        let playerCount = 0;
+        for(let pid in players){ 
+          for (let i = 0; i < mailCount; i++) {
+            push(ref(db, `game_players/${pid}/mail`), { ...mailData, time: Date.now() + i }); 
+          }
+          playerCount++; 
+        }
+        alert(`✅ 全服邮件发送成功！\n每位玩家收到 ${mailCount} 封。\n共发送给 ${playerCount} 名玩家。`);
         document.getElementById('selectModal').style.display = 'none';
       }
     });
   } else {
-    push(ref(db, `game_players/${targetId}/mail`), mailData).then(() => {
-      alert("✅ 邮件发送成功！");
-      document.getElementById('selectModal').style.display = 'none';
-    });
+    for (let i = 0; i < mailCount; i++) {
+        push(ref(db, `game_players/${targetId}/mail`), { ...mailData, time: Date.now() + i });
+    }
+    alert(`✅ 邮件发送成功！\n已发送 ${mailCount} 封。`);
+    document.getElementById('selectModal').style.display = 'none';
   }
 };
 
