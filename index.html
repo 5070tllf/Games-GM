@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>游戏作者控制台</title>
+<title>游戏作者端 · 上帝控制台</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif; -webkit-tap-highlight-color:transparent; }
 body { background:#000; color:#fff; height:100vh; height:100dvh; display:flex; overflow:hidden; }
@@ -81,6 +81,7 @@ const QUALITY_NAMES = ['凡品','下品','中品','上品','极品','仙品','�
 const PART_NAMES = { weapon:'武器', helmet:'头盔', armor:'护甲', boots:'靴子', ring:'戒指', necklace:'项链', belt:'腰带', artifact:'法宝' };
 const PART_KEYS = ['weapon','helmet','armor','boots','ring','necklace','belt','artifact'];
 const REALM_NAMES = ['炼气','筑基','金丹','元婴','化神','炼虚','合体','大乘','渡劫','真仙','玄仙','地仙','天仙','金仙','大罗金仙','混元大罗金仙','准圣','圣人','天道圣人','大道圣人','鸿蒙圣人','造化圣人','混元圣人','无极圣人','太上圣人','混沌圣人','鸿蒙主宰','大道主宰','无极大道','太初大道','太易大道','太始大道','太素大道','太极大道','混元无极大罗金仙','混元太上无极金仙','混元太初无上金仙','混元太易无上金仙','混元太始无上金仙','混元太素无上金仙','混元太极无上金仙','混元太极大罗金仙','混元无极太上金仙','混元无上太初金仙','混元无上太易金仙','混元无上太始金仙','混元无上太素金仙','混元无上太极金仙','混元无极天道圣人','混元无上大道圣人','混元无极鸿蒙圣人','混元无上造化圣人','混元无极混元圣人','混元无上无极圣人','混元无极太上圣人','混元无上混沌圣人','混元无极鸿蒙主宰','混元无上大道主宰','混元无极无极大道','太上无极混元无上大道','太上无极混元无上天道','太上无极混元无上鸿蒙','太上无极混元无上造化','太上无极混元无上混沌','太上无极混元无上本源','太上无极混元无上终极','大道本源无上主宰','鸿蒙本源无上主宰','混沌本源无上主宰','宇宙本源无上主宰','万物本源无上主宰','终极本源无上主宰'];
+const WORLD_NAMES = ['凡界', '仙界', '神界', '混沌界', '三千界域'];
 
 const PET_NAMES = ['灵狐','火麒麟','九尾狐','白虎','朱雀','玄武','青龙','穷奇','饕餮','混沌','梼杌','金乌','鲲鹏','凤凰','麒麟','狻猊','睚眦','囚牛','蒲牢','霸下'];
 const SPIRIT_NAMES = ['树精','石灵','剑灵','火灵','水灵','风灵','雷灵','光灵','暗灵','花精','药灵','器灵','符灵','阵灵','傀灵','妖灵','魔灵','仙灵','神灵','圣灵'];
@@ -226,6 +227,7 @@ function renderPlayerDetail(id, p) {
       <div style="font-size:16px;font-weight:800;color:#ffd700;margin-bottom:8px;">${escapeHtml(p.name||'无名')}</div>
       <div style="font-size:12px;color:#aaa;line-height:1.8;">
         ID：${id}<br>Lv.${fmt(p.charLevel)} · 经验 ${fmt(p.exp)}<br>
+        当前世界：【${WORLD_NAMES[p.currentWorldIdx !== undefined ? p.currentWorldIdx : 0]}】<br>
         境界 ${REALM_NAMES[safeNum(p.realm,0)]||'炼气'} ${safeNum(p.realmLevel,1)}层<br>
         仙树 Lv.${fmt(p.treeLevel)} ${(p.treeUpgradeEnd>Date.now())?`(培育中)`:''}<br>
         轮回 ${safeNum(p.reincarnateCount,0)} 次 | 天赋点 ${safeNum(p.talentPoints,0)}<br>
@@ -278,6 +280,20 @@ function renderPlayerDetail(id, p) {
     </div>
 
     <div class="card">
+      <div class="card-title">🌌 传送与控制</div>
+      <div class="grid2">
+        <button class="btn btn-gold" onclick="teleportPlayer('${id}')" style="grid-column: span 2; padding: 14px; font-size: 15px;">🚀 传送至指定世界</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🛡️ 账号安全</div>
+      <div class="grid2">
+        <button class="btn btn-purple" onclick="viewPlayerPassword('${id}')" style="grid-column: span 2;">👁️ 查看玩家密码</button>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-title">⚔️ 身上穿戴的装备</div>
       <div style="display:grid;gap:6px;">${eqHtml}</div>
     </div>
@@ -300,6 +316,43 @@ function renderPlayerDetail(id, p) {
     </div>
   `;
 }
+
+// ===== 新增：查看密码逻辑 =====
+window.viewPlayerPassword = async function(id) {
+  const pName = allPlayers[id].name;
+  if (!pName) return alert('该玩家名字为空，无法查询密码。');
+  
+  try {
+    const snap = await get(ref(db, 'game_accounts/' + pName));
+    if (snap.exists() && snap.val().password) {
+      let rawPwd = snap.val().password;
+      let decodedPwd = rawPwd;
+      try {
+        decodedPwd = atob(rawPwd); // 尝试解码 Base64
+      } catch (e) {
+        decodedPwd = rawPwd; // 如果解码失败就显示原密码
+      }
+      alert(`玩家【${pName}】的登录密码是：\n\n👉 ${decodedPwd}\n\n(数据库加密值: ${rawPwd})`);
+    } else {
+      alert('未在 game_accounts 节点找到该玩家的密码数据。可能通过其他方式注册。');
+    }
+  } catch (err) {
+    alert('读取密码失败：' + err.message);
+  }
+};
+
+// ===== 新增：传送世界逻辑 =====
+window.teleportPlayer = function(id) {
+  const items = WORLD_NAMES.map((name, idx) => ({ label: `第 ${idx} 世界 - ${name}`, value: idx }));
+  openSelectionModal("传送玩家到哪个世界？", items, async (val) => {
+    try {
+      await update(ref(db, 'game_players/' + id), { currentWorldIdx: parseInt(val) });
+      alert(`✅ 成功将玩家传送到【${WORLD_NAMES[val]}】！`);
+    } catch (e) {
+      alert('传送失败: ' + e.message);
+    }
+  });
+};
 
 // ===== 邮件功能（包含全物品/装备/进阶，且支持发送多封） =====
 window.sendMail = function(targetId) {
@@ -481,12 +534,105 @@ window.setRealmSelect = function(id) {
   });
 };
 
-window.sendJade = (id) => { const n = parseBigNum(prompt('发放仙玉:', '10'), null); if(n !== null) push(ref(db, 'game_players/'+id+'/inbox'), { type:'jade', payload:{amount:n}, claimed:false }).then(()=>alert('✅ 仙玉已发送到玩家信箱')); };
-window.sendPeaches = (id) => { const n = parseBigNum(prompt('发放仙桃:', '1000'), null); if(n !== null) push(ref(db, 'game_players/'+id+'/inbox'), { type:'peaches', payload:{amount:n}, claimed:false }).then(()=>alert('✅ 仙桃已发送到玩家信箱')); };
-window.sendExp = (id) => { const n = parseBigNum(prompt('发放经验:', '1000'), null); if(n !== null) push(ref(db, 'game_players/'+id+'/inbox'), { type:'exp', payload:{amount:n}, claimed:false }).then(()=>alert('✅ 经验已发送到玩家信箱')); };
-window.sendTalent = (id) => { const n = parseBigNum(prompt('天赋点:', '10'), null); if(n !== null) push(ref(db, 'game_players/'+id+'/inbox'), { type:'talentPoints', payload:{amount:n}, claimed:false }).then(()=>alert('✅ 天赋点已发送')); };
-window.sendSect = (id) => { const n = parseBigNum(prompt('宗门贡献:', '100'), null); if(n !== null) push(ref(db, 'game_players/'+id+'/inbox'), { type:'sectPoints', payload:{amount:n}, claimed:false }).then(()=>alert('✅ 贡献已发送')); };
+// ===== 发放物品（改为弹窗输入） =====
+window.sendJade = (id) => {
+  document.getElementById('selectModalTitle').innerText = "发放仙玉";
+  document.getElementById('selectModalContent').innerHTML = `
+    <div style="font-size:13px;margin-bottom:10px;color:#fff;">输入发放的仙玉数量（支持 10000, 1e10, 1.7e308）</div>
+    <input id="input_val" type="text" value="10000" style="padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;margin-bottom:15px;">
+    <button class="btn btn-jade" onclick="confirmSendResource('${id}', 'jade')">确认发放</button>
+  `;
+  document.getElementById('selectModal').style.display = 'flex';
+};
 
+window.sendPeaches = (id) => {
+  document.getElementById('selectModalTitle').innerText = "发放仙桃";
+  document.getElementById('selectModalContent').innerHTML = `
+    <div style="font-size:13px;margin-bottom:10px;color:#fff;">输入发放的仙桃数量</div>
+    <input id="input_val" type="text" value="100000" style="padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;margin-bottom:15px;">
+    <button class="btn btn-orange" onclick="confirmSendResource('${id}', 'peaches')">确认发放</button>
+  `;
+  document.getElementById('selectModal').style.display = 'flex';
+};
+
+window.sendExp = (id) => {
+  document.getElementById('selectModalTitle').innerText = "发放经验";
+  document.getElementById('selectModalContent').innerHTML = `
+    <div style="font-size:13px;margin-bottom:10px;color:#fff;">输入发放的经验数量</div>
+    <input id="input_val" type="text" value="10000" style="padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;margin-bottom:15px;">
+    <button class="btn btn-blue" onclick="confirmSendResource('${id}', 'exp')">确认发放</button>
+  `;
+  document.getElementById('selectModal').style.display = 'flex';
+};
+
+window.sendTalent = (id) => {
+  document.getElementById('selectModalTitle').innerText = "发放天赋点";
+  document.getElementById('selectModalContent').innerHTML = `
+    <div style="font-size:13px;margin-bottom:10px;color:#fff;">输入发放的天赋点数量</div>
+    <input id="input_val" type="text" value="10" style="padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;margin-bottom:15px;">
+    <button class="btn btn-purple" onclick="confirmSendResource('${id}', 'talentPoints')">确认发放</button>
+  `;
+  document.getElementById('selectModal').style.display = 'flex';
+};
+
+window.sendSect = (id) => {
+  document.getElementById('selectModalTitle').innerText = "发放宗门贡献";
+  document.getElementById('selectModalContent').innerHTML = `
+    <div style="font-size:13px;margin-bottom:10px;color:#fff;">输入发放的贡献数量</div>
+    <input id="input_val" type="text" value="1000" style="padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;margin-bottom:15px;">
+    <button class="btn btn-green" onclick="confirmSendResource('${id}', 'sectPoints')">确认发放</button>
+  `;
+  document.getElementById('selectModal').style.display = 'flex';
+};
+
+window.confirmSendResource = async function(id, type) {
+  const v = parseBigNum(document.getElementById('input_val').value, 0);
+  if (v <= 0) return alert('数量必须大于0！');
+  try {
+    await push(ref(db, 'game_players/'+id+'/inbox'), { type: type, payload:{ amount: v }, claimed:false });
+    alert(`✅ ${type} 已发送到玩家信箱！`);
+    document.getElementById('selectModal').style.display = 'none';
+  } catch(e) {
+    alert('发送失败：' + e.message);
+  }
+};
+
+// ===== 修改核心数值（全部改为弹窗） =====
+window.setCharLevel = (id) => { openNumberEdit('改等级', id, 'charLevel', '100'); };
+window.setExp = (id) => { openNumberEdit('改经验', id, 'exp', '0'); };
+window.setTreeLevel = (id) => { openNumberEdit('改仙树等级', id, 'treeLevel', '1'); };
+window.setJade = (id) => { openNumberEdit('改仙玉', id, 'jade', '10000'); };
+window.setPeaches = (id) => { openNumberEdit('改仙桃', id, 'peaches', '100000'); };
+window.setAtk = (id) => { openNumberEdit('改攻击', id, 'atk', '10000'); };
+window.setHp = (id) => { openNumberEdit('改气血', id, 'hp', '10000'); };
+window.setReincarnate = (id) => { openNumberEdit('改轮回次数', id, 'reincarnateCount', '0'); };
+window.setTalent = (id) => { openNumberEdit('改天赋点', id, 'talentPoints', '0'); };
+window.setSectPoints = (id) => { openNumberEdit('改宗门贡献', id, 'sectPoints', '0'); };
+
+window.openNumberEdit = function(title, id, key, defVal) {
+  const current = allPlayers[id][key] !== undefined ? allPlayers[id][key] : defVal;
+  document.getElementById('selectModalTitle').innerText = title;
+  document.getElementById('selectModalContent').innerHTML = `
+    <div style="font-size:13px;margin-bottom:10px;color:#fff;">输入新数值（支持 100, 1e10, 1.7e308）</div>
+    <input id="input_val" type="text" value="${current}" style="padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;margin-bottom:15px;">
+    <button class="btn btn-gold" onclick="confirmNumberEdit('${id}', '${key}')">确认修改</button>
+  `;
+  document.getElementById('selectModal').style.display = 'flex';
+};
+
+window.confirmNumberEdit = async function(id, key) {
+  let v = parseBigNum(document.getElementById('input_val').value, null);
+  if (v === null) return alert('请输入有效数字！');
+  try {
+    await update(ref(db, 'game_players/'+id), { [key]: v });
+    alert('✅ 修改成功！');
+    document.getElementById('selectModal').style.display = 'none';
+  } catch(e) {
+    alert('修改失败：' + e.message);
+  }
+};
+
+// ===== 其他装备与发放功能 =====
 window.sendEquipment = function(id) {
   const items = QUALITY_NAMES.map((name, idx) => ({ label: `第 ${idx} 阶 - ${name}`, value: idx }));
   openSelectionModal("选择要发放的装备品质", items, (q) => {
@@ -539,17 +685,6 @@ window.createGiftPack = async function() {
 };
 window.clearAllGifts = function() { if (confirm("确定清空所有特惠礼包吗？")) remove(ref(db, 'game_gifts')).then(() => alert("已清空")); };
 
-window.setCharLevel = (id) => { const v = parseBigNum(prompt('等级:', '100'), null); if(v !== null) update(ref(db, 'game_players/'+id), { charLevel: v }).then(()=>renderPlayerDetail(id, allPlayers[id])); };
-window.setExp = (id) => { const v = parseBigNum(prompt('经验:', '0'), null); if(v !== null) update(ref(db, 'game_players/'+id), { exp: v }).then(()=>renderPlayerDetail(id, allPlayers[id])); };
-window.setTreeLevel = (id) => { const v = parseBigNum(prompt('仙树等级:', '1'), null); if(v !== null) update(ref(db, 'game_players/'+id), { treeLevel: v }).then(()=>renderPlayerDetail(id, allPlayers[id])); };
-window.setJade = (id) => { const v = parseBigNum(prompt('仙玉:', '10000'), null); if(v !== null) update(ref(db, 'game_players/'+id), { jade: v }).then(()=>renderPlayerDetail(id, allPlayers[id])); };
-window.setPeaches = (id) => { const v = parseBigNum(prompt('仙桃:', '100000'), null); if(v !== null) update(ref(db, 'game_players/'+id), { peaches: v }).then(()=>renderPlayerDetail(id, allPlayers[id])); };
-window.setAtk = (id) => { const v = parseBigNum(prompt('攻击:', '10000'), null); if(v !== null) update(ref(db, 'game_players/'+id), { atk: v }).then(()=>renderPlayerDetail(id, allPlayers[id])); };
-window.setHp = (id) => { const v = parseBigNum(prompt('气血:', '10000'), null); if(v !== null) update(ref(db, 'game_players/'+id), { hp: v }).then(()=>renderPlayerDetail(id, allPlayers[id])); };
-window.setReincarnate = (id) => { const v = parseBigNum(prompt('轮回次数:', '0'), null); if(v !== null) update(ref(db, 'game_players/'+id), { reincarnateCount: v }).then(()=>renderPlayerDetail(id, allPlayers[id])); };
-window.setTalent = (id) => { const v = parseBigNum(prompt('天赋点:', '0'), null); if(v !== null) update(ref(db, 'game_players/'+id), { talentPoints: v }).then(()=>renderPlayerDetail(id, allPlayers[id])); };
-window.setSectPoints = (id) => { const v = parseBigNum(prompt('宗门贡献:', '0'), null); if(v !== null) update(ref(db, 'game_players/'+id), { sectPoints: v }).then(()=>renderPlayerDetail(id, allPlayers[id])); };
-
 window.setEquipEnhance = (id, part) => { 
   const v = parseBigNum(prompt('强化等级:', '0'), null); 
   if(v !== null) {
@@ -558,7 +693,7 @@ window.setEquipEnhance = (id, part) => {
   } 
 };
 
-window.setEquipStats = (id, part) => {
+window.setEquipStats = function(id, part) {
   const eq = allPlayers[id].equipment[part];
   const html = `
     <div style="display:flex;flex-direction:column;gap:10px;">
